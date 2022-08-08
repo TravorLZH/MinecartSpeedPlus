@@ -1,9 +1,0 @@
-<component name="ArtifactManager">
-  <artifact type="jar" build-on-make="true" name="MinecartSP">
-    <output-path>$PROJECT_DIR$/../MCServer/plugins</output-path>
-    <root id="archive" name="MinecartSP.jar">
-      <element id="module-output" name="minecart_speedplus" />
-      <element id="file-copy" path="$PROJECT_DIR$/plugin.yml" />
-    </root>
-  </artifact>
-</component>

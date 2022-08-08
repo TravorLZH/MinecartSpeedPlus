@@ -1,11 +1,12 @@
 /target
-/.classpath
-/.project
+.classpath
+.project
 
 **/*.class
 
-/*.jar
+*.jar
 build/
 
 bin/
 *.iml
+.idea/
