@@ -55,21 +55,30 @@ fixed CraftBukkit ignoring the global speed.
 Added support for 1.17, updated mapping and fixed "[msp] fly".
 Only tested on Spigot as other forks are not available yet.
 Backwards compatibility untested, but should work fine,
- please note there is currently cap at speed 4 when dynamically 
- changing speed due to some strange minecart behavior that could 
- occur when moving faster in versions grater than 1.13, if you 
- need faster speed and have an older server version you can 
- simply use an older version of this resource.
+please note there is currently cap at speed 4 when dynamically 
+changing speed due to some strange minecart behavior that could 
+occur when moving faster in versions grater than 1.13, if you 
+need faster speed and have an older server version you can 
+simply use an older version of this resource.
 
 17.0.3	
 This is just a quick update to fix a mistake i made in spelling.
 
-
 18.0.1	
- Migrated from the SpigotAPI to the PaperAPI and replaced all spigot 
- packages with their bukkit equivalents for maximum compatibility
+Migrated from the SpigotAPI to the PaperAPI and replaced all spigot 
+packages with their bukkit equivalents for maximum compatibility
 Changed the blue text to a more modern style as requested by a multiple users
-forced a global minecart speed limit of 4 (forgot to cap global in the last update)
+forced a global minecart speed limit of 4 (forgot to cap global in the last
+update)
 it is now possible to use decimal numbers for a more specific speed
 Fully compatible with Bukkit, Spigot, Paper and all it's forks
-    [ https://imgur.com/a/4T1SLcZ ]
+[ https://imgur.com/a/4T1SLcZ ]
+
+19.0.1
+Added slow mode for minecarts and debug command
+
+Slow mode is automatically enabled when the minecart is about to ascend or
+turn and disabled afterwards. Otherwise, the minecart could be bounced back or
+run off track while ascending or turning.
+
+To monitor the status of minecarts' slow mode, type `/mspdebug on'
