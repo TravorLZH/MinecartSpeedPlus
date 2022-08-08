@@ -8,6 +8,7 @@ import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
 import org.bukkit.block.data.Rail;
 import org.bukkit.entity.Minecart;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -24,12 +25,6 @@ public class Minecart_speedplusVehicleListener implements Listener {
 	int[] xmodifier = {-1, 0, 1};
 	int[] ymodifier = {-2, -1, 0, 1, 2};
 	int[] zmodifier = {-1, 0, 1};
-
-	int cartx, carty, cartz;
-	int blockx, blocky, blockz;
-
-	Block block;
-	int blockid;
 
 	double line1;
 
@@ -54,16 +49,34 @@ public class Minecart_speedplusVehicleListener implements Listener {
 
 		}
 	}
-	static int sign(int x){
-		if(x>0)
+
+	/**
+	 * Obtain sign information from a number
+	 * @param x some number
+	 * @return 1 if x is positive, -1 if negative, and 0 otherwise
+	 */
+	static int sign(double x){
+		if(x>0.0)
 			return 1;
-		if(x<0)
+		if(x<0.0)
 			return -1;
 		return 0;
 	}
+
+	/**
+	 * Check if the minecart is moving in a straight direction
+	 * @param vec The velocity vector
+	 * @return true if the minecart is moving in a straight direction, false otherwise
+	 */
+	static boolean isStraight(Vector vec){
+		return vec.getX()!=0 || vec.getZ()!=0 && vec.getX()*vec.getZ()==0;
+	}
 	@EventHandler(priority = EventPriority.NORMAL)
 	public void onVehicleMove(VehicleMoveEvent event) {
+		int cartx, carty, cartz;
+		int blockx, blocky, blockz;
 
+		Block block;
 		if (!(event.getVehicle() instanceof Minecart))
 			return;
 
@@ -73,17 +86,25 @@ public class Minecart_speedplusVehicleListener implements Listener {
 		cartz = cart.getLocation().getBlockZ();
 		/* TODO: Slow down the Minecart automatically when it ascends or reaches a corner */
 		Vector vel = cart.getVelocity();
-		if (vel.getZ() * vel.getX() == 0) {    // If the minecart is moving on a straight path
-			block = cart.getWorld().getBlockAt(cartx + (vel.getX() > 0 ? 1 : -1), carty,
-					cartz + (vel.getZ() > 0 ? 1 : -1));
+		if (isStraight(vel)) {
+			/* If the minecart is moving straight, then get the next rail it's going to touch */
+			block = cart.getWorld().getBlockAt(cartx + sign(vel.getX()), carty,
+					cartz + sign(vel.getY()));
 		}else{
+			/* Otherwise, get the rail it is on */
+			block = cart.getWorld().getBlockAt(cartx,carty,cartz);
+		}
 		if(Tag.RAILS.isTagged(block.getType())){
 			Rail rail=(Rail)block.getBlockData();
 			if(rail.getShape().equals(Rail.Shape.ASCENDING_EAST)
 				|| rail.getShape().equals(Rail.Shape.ASCENDING_NORTH)
 				|| rail.getShape().equals(Rail.Shape.ASCENDING_SOUTH)
 				|| rail.getShape().equals(Rail.Shape.ASCENDING_WEST)){
-
+				/* TODO: Slow down the cart if it is going to ascend */
+				if(cart.getPassengers().size()!=0
+						&& cart.getPassengers().get(0) instanceof Player){
+					cart.getPassengers().get(0).sendMessage("You are going to ascend");
+				}
 			}
 		}
 		/* Search signs and adjust speed */
