@@ -1,14 +1,14 @@
 package fi.dy.esav.Minecart_speedplus;
 
-import java.util.logging.Logger;
-
 import org.bukkit.Tag;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
 import org.bukkit.block.data.Rail;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Minecart;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Vehicle;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -22,16 +22,11 @@ public class Minecart_speedplusVehicleListener implements Listener {
 		return Tag.SIGNS.isTagged(m);
 	}
 
-	int[] xmodifier = {-1, 0, 1};
-	int[] ymodifier = {-2, -1, 0, 1, 2};
-	int[] zmodifier = {-1, 0, 1};
+	private int[] xmodifier = {-1, 0, 1};
+	private int[] ymodifier = {-2, -1, 0, 1, 2};
+	private int[] zmodifier = {-1, 0, 1};
 
-	double line1;
-
-	public static Minecart_speedplus plugin;
-	Logger log = Logger.getLogger("Minecraft");
-
-	boolean error;
+	private Minecart_speedplus plugin;
 
 	Vector flyingmod = new Vector(10, 0.01, 10);
 	Vector noflyingmod = new Vector(1, 1, 1);
@@ -55,7 +50,7 @@ public class Minecart_speedplusVehicleListener implements Listener {
 	 * @param x some number
 	 * @return 1 if x is positive, -1 if negative, and 0 otherwise
 	 */
-	static int sign(double x){
+	private static int sign(double x){
 		if(x>0.0)
 			return 1;
 		if(x<0.0)
@@ -64,29 +59,63 @@ public class Minecart_speedplusVehicleListener implements Listener {
 	}
 
 	/**
-	 * Check if the minecart is moving in a straight direction
-	 * @param vec The velocity vector
-	 * @return true if the minecart is moving in a straight direction, false otherwise
+	 * Send messages to passengers of a vehicle
+	 * @param vehicle Vehicle object
+	 * @param message Message content
 	 */
-	static boolean isStraight(Vector vec){
-		return vec.getX()!=0 || vec.getZ()!=0 && vec.getX()*vec.getZ()==0;
+	private void notifyPassenger(Vehicle vehicle,String message){
+		for(Entity passenger:vehicle.getPassengers()) {
+			if(plugin.getMetadata(passenger,"debug")!=null
+					&& (boolean)plugin.getMetadata(passenger,"debug"))
+				passenger.sendMessage(message);
+		}
 	}
+
+	/**
+	 * Toggle the velocity status of the minecart
+	 * @param cart The minecart object
+	 * @param flag true: enables slow mode, false: disables slow mode
+	 */
+	private void slow(Minecart cart,boolean flag){
+		double ms=0.0;
+		if(flag && plugin.getMetadata(cart,"slow")==null){
+			/* If we were to make the minecart slow,
+			 * then save its current speed information first */
+			plugin.setMetadata(cart,"slow",true);
+			ms=cart.getMaxSpeed();
+			plugin.setMetadata(cart,"maxSpeed",ms);
+			notifyPassenger(cart,"Slow mode on (old maxSpeed="+ms+")");
+			cart.setMaxSpeed(0.4);
+		}else if(!flag
+				&& plugin.getMetadata(cart,"slow")!=null
+				&& (boolean)plugin.getMetadata(cart,"slow")) {
+			ms=(double)plugin.getMetadata(cart, "maxSpeed");
+			cart.setMaxSpeed(ms);
+			plugin.setMetadata(cart,"slow",false);
+			notifyPassenger(cart,"Slow mode off (restoring maxSpeed="+ms+")");
+		}
+	}
+
 	@EventHandler(priority = EventPriority.NORMAL)
 	public void onVehicleMove(VehicleMoveEvent event) {
+		boolean error;
 		int cartx, carty, cartz;
 		int blockx, blocky, blockz;
+		double line1=-1;
 
 		Block block;
 		if (!(event.getVehicle() instanceof Minecart))
 			return;
 
 		Minecart cart = (Minecart) event.getVehicle();
+
+		/* Store its current velocity parameters so that we can recover it when it is not in slow mode */
 		cartx = cart.getLocation().getBlockX();
 		carty = cart.getLocation().getBlockY();
 		cartz = cart.getLocation().getBlockZ();
-		/* TODO: Slow down the Minecart automatically when it ascends or reaches a corner */
 		Vector vel = cart.getVelocity();
-		if (isStraight(vel)) {
+		/* Slow down the Minecart automatically when it ascends or reaches a corner */
+		if (vel.getX()*vel.getZ()==0 && vel.getX()!=vel.getZ()) {
 			/* If the minecart is moving straight, then get the next rail it's going to touch */
 			block = cart.getWorld().getBlockAt(cartx + sign(vel.getX()), carty,
 					cartz + sign(vel.getY()));
@@ -99,12 +128,14 @@ public class Minecart_speedplusVehicleListener implements Listener {
 			if(rail.getShape().equals(Rail.Shape.ASCENDING_EAST)
 				|| rail.getShape().equals(Rail.Shape.ASCENDING_NORTH)
 				|| rail.getShape().equals(Rail.Shape.ASCENDING_SOUTH)
-				|| rail.getShape().equals(Rail.Shape.ASCENDING_WEST)){
-				/* TODO: Slow down the cart if it is going to ascend */
-				if(cart.getPassengers().size()!=0
-						&& cart.getPassengers().get(0) instanceof Player){
-					cart.getPassengers().get(0).sendMessage("You are going to ascend");
-				}
+				|| rail.getShape().equals(Rail.Shape.ASCENDING_WEST)
+				|| rail.getShape().equals(Rail.Shape.NORTH_EAST)
+				|| rail.getShape().equals(Rail.Shape.NORTH_WEST)
+				|| rail.getShape().equals(Rail.Shape.SOUTH_EAST)
+				|| rail.getShape().equals(Rail.Shape.SOUTH_WEST)){
+				slow(cart,true);
+			}else{
+				slow(cart,false);
 			}
 		}
 		/* Search signs and adjust speed */
@@ -147,7 +178,7 @@ public class Minecart_speedplusVehicleListener implements Listener {
 								}
 								if (!error) {
 
-									if (0 < line1 & line1 <= 50) {
+									if (0 < line1 && line1 <= 50) {
 
 										cart.setMaxSpeed(0.4D * Double.parseDouble(text[1]));
 
