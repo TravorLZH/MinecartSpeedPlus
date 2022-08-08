@@ -16,6 +16,9 @@ public class Minecart_speedplusSignListener implements Listener {
 
 	@EventHandler(priority = EventPriority.NORMAL)
 	public void onSignChange (SignChangeEvent e) {
+		/* Just in case you get an empty sign */
+		if(e.getLine(0)==null || e.getLine(1)==null)
+			return;
 		if(e.getLine(0).equalsIgnoreCase("[msp]")) {
 			if(e.getLine(1).equalsIgnoreCase("fly") || e.getLine(1).equalsIgnoreCase("nofly")) {
 				if(!(e.getPlayer().hasPermission("msp.signs.fly"))) {

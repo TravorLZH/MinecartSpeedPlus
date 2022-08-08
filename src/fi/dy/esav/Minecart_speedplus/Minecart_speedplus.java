@@ -5,7 +5,6 @@ import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -27,7 +26,7 @@ public class Minecart_speedplus extends JavaPlugin {
 	}
 
 	public boolean setSpeedMultiplier(double multiplier) {
-		if ((((0.0D < multiplier) ? 1 : 0) & ((multiplier <= 4.0D) ? 1 : 0)) != 0) {
+		if(multiplier>0.0 && multiplier<=4.00){
 			speedmultiplier = multiplier;
 			return true;
 		}
@@ -37,8 +36,8 @@ public class Minecart_speedplus extends JavaPlugin {
 	public void onEnable() {
 		this.log.info(getDescription().getName() + " version " + getDescription().getVersion() + " started.");
 		PluginManager pm = getServer().getPluginManager();
-		pm.registerEvents(this.VehicleListener, (Plugin)this);
-		pm.registerEvents(this.SignListener, (Plugin)this);
+		pm.registerEvents(this.VehicleListener, this);
+		pm.registerEvents(this.SignListener, this);
 	}
 
 	public void onDisable() {

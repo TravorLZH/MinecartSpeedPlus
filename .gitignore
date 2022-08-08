@@ -6,3 +6,6 @@
 
 /*.jar
 build/
+
+bin/
+*.iml
