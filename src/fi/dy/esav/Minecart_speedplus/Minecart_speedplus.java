@@ -12,12 +12,12 @@ import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class Minecart_speedplus extends JavaPlugin {
-	Logger log = Logger.getLogger("Minecraft");
+	private Logger log = Logger.getLogger("Minecraft");
 
 	private final Minecart_speedplusVehicleListener VehicleListener = new Minecart_speedplusVehicleListener(this);
 	private final Minecart_speedplusSignListener SignListener = new Minecart_speedplusSignListener(this);
 
-	private static double speedmultiplier = 1.25D;
+	private double speedmultiplier = -1;
 
 	/**
 	 * Set/create metadata
@@ -42,13 +42,16 @@ public class Minecart_speedplus extends JavaPlugin {
 		return null;
 	}
 
-	public static double getSpeedMultiplier() {
+	public double getSpeedMultiplier() {
+		if(speedmultiplier<0 && getConfig().get("multiplier")!=null)
+			speedmultiplier=getConfig().getDouble("multiplier");
 		return speedmultiplier;
 	}
 
 	public void setSpeedMultiplier(double multiplier) {
 		if(multiplier>0.0 && multiplier<=4.00){
 			speedmultiplier = multiplier;
+			getConfig().set("multiplier",multiplier);
 			return;
 		}
 		throw new RuntimeException("Invalid input");
@@ -59,10 +62,13 @@ public class Minecart_speedplus extends JavaPlugin {
 		PluginManager pm = getServer().getPluginManager();
 		pm.registerEvents(this.VehicleListener, this);
 		pm.registerEvents(this.SignListener, this);
+		saveDefaultConfig();
+		log.info("max speed multiplier="+getSpeedMultiplier());
 	}
 
 	public void onDisable() {
 		this.log.info(getDescription().getName() + " version " + getDescription().getVersion() + " stopped.");
+		saveConfig();
 	}
 
 	public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args) {

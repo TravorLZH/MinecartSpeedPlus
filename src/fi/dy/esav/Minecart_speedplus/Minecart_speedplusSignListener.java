@@ -7,7 +7,7 @@ import org.bukkit.event.block.SignChangeEvent;
 
 public class Minecart_speedplusSignListener implements Listener {
 
-	Minecart_speedplus plugin;
+	private Minecart_speedplus plugin;
 
 	public Minecart_speedplusSignListener(Minecart_speedplus instance) {
 
